@@ -396,8 +396,8 @@
             const [bodyWeight, setBodyWeight] = useState(82.5);
             const [mealPlan, setMealPlan] = useState(DEFAULT_MEAL_PLAN);
             
-            // Dark Mode State
-            const [isDarkMode, setIsDarkMode] = useState(false);
+            // Dark Mode State (Defaulted to true)
+            const [isDarkMode, setIsDarkMode] = useState(true);
 
             useEffect(() => {
                 if (isDarkMode) {
