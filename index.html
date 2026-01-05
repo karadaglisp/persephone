@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Circe Nutrition Dashboard</title>
+    <title>Persephone Nutrition Dashboard</title>
     
+    <!-- Favicon (Pomegranate/Seed Theme) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23be185d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 2a5 5 0 0 1 5 5'/%3E%3Cpath d='M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0' opacity='0.5'/%3E%3C/svg%3E">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -14,6 +17,7 @@
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'system-ui', 'sans-serif'],
+                        serif: ['Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
                     }
                 }
             }
@@ -55,52 +59,52 @@
         // --- DATA & CONFIG ---
 
         const RECIPE_POOL = {
-            // Breakfast
-            'b_strapatsada': { name: 'Strapatsada', portion: '4 Eggs, 2 Tomatoes, 30g Feta', p: 32, c: 10, f: 25, kcal: 400, cost: 2.2, grocery: { 'Eggs': 4, 'Tomatoes': 2, 'Feta (g)': 30, 'Olive Oil (ml)': 10 }, instructions: "1. Grate tomatoes. 2. Simmer tomato pulp with oil until thick. 3. Add beaten eggs and scramble. 4. Add feta at the end." },
-            'b_boiled': { name: 'Hard Boiled Eggs', portion: '4 Large Eggs', p: 24, c: 2, f: 20, kcal: 280, cost: 1.6, grocery: { 'Eggs': 4 }, instructions: "1. Boil water. 2. Add eggs carefully. 3. Boil for 9-10 mins. 4. Cool in cold water and peel." },
-            'b_fried': { name: 'Fried Eggs', portion: '4 Eggs fried in 10ml Olive Oil', p: 24, c: 2, f: 30, kcal: 380, cost: 1.7, grocery: { 'Eggs': 4, 'Olive Oil (ml)': 10 }, instructions: "1. Heat oil in pan. 2. Crack eggs into pan. 3. Cook until whites are set but yolks runny. 4. Season." },
-            'b_scrambled': { name: 'Scrambled Eggs', portion: '4 Eggs, Toast', p: 28, c: 20, f: 20, kcal: 400, cost: 1.8, grocery: { 'Eggs': 4, 'Bread (slices)': 2 }, instructions: "1. Whisk eggs with splash of water. 2. Pour into heated pan. 3. Stir gently until set. 4. Serve with toast." },
-            'b_omelet_turkey': { name: 'Turkey Omelet', portion: '4 Eggs, 3 slices Turkey', p: 35, c: 2, f: 20, kcal: 350, cost: 2.5, grocery: { 'Eggs': 4, 'Turkey Slices': 3 }, instructions: "1. Whisk eggs. 2. Pour into pan. 3. Add turkey slices when half-set. 4. Fold and serve." },
-            'b_pancakes': { name: 'Oat Pancakes', portion: '3 Eggs, 60g Oats, Banana', p: 25, c: 55, f: 15, kcal: 480, cost: 1.5, grocery: { 'Eggs': 3, 'Oats (g)': 60, 'Banana': 1 }, instructions: "1. Blend eggs, oats, and banana. 2. Pour batter onto hot pan. 3. Flip when bubbles appear. 4. Serve." },
-            'b_feta_omelet': { name: 'Feta Omelet', portion: '4 Eggs, 50g Feta, Spinach', p: 35, c: 5, f: 30, kcal: 480, cost: 2.3, grocery: { 'Eggs': 4, 'Feta (g)': 50, 'Spinach (g)': 50 }, instructions: "1. Saute spinach briefly. 2. Pour whisked eggs over. 3. Crumble feta on top. 4. Fold when set." },
+            // Breakfast - Optimized for High Protein / Moderate Fat
+            'b_strapatsada': { name: 'Strapatsada & Lean Toast', portion: '5 Eggs (3 Whites), 3 Tomatoes, 30g Feta, 2 Toast', p: 40, c: 45, f: 20, kcal: 550, cost: 2.5, grocery: { 'Eggs': 5, 'Tomatoes': 3, 'Feta (g)': 30, 'Olive Oil (ml)': 5, 'Bread (slices)': 2 }, instructions: "1. Simmer tomato pulp with minimal oil. 2. Add 2 whole eggs + 3 whites. 3. Finish with feta. 4. Serve with toast." },
+            'b_boiled': { name: 'Boiled Eggs & Turkey Toast', portion: '4 Eggs, 2 Toast, 2 Turkey Slices', p: 35, c: 35, f: 20, kcal: 480, cost: 2.0, grocery: { 'Eggs': 4, 'Bread (slices)': 2, 'Turkey Slices': 2 }, instructions: "1. Boil eggs. 2. Toast bread with turkey slices. 3. Serve together." },
+            'b_fried': { name: 'Fried Eggs & Toast', portion: '4 Eggs (Light Oil), 3 Slices Bread', p: 28, c: 50, f: 25, kcal: 540, cost: 1.9, grocery: { 'Eggs': 4, 'Olive Oil (ml)': 5, 'Bread (slices)': 3 }, instructions: "1. Fry eggs in minimal oil. 2. Dip bread in yolks." },
+            'b_scrambled': { name: 'Scrambled Eggs on Toast', portion: '5 Eggs, 3 Slices Bread', p: 35, c: 50, f: 25, kcal: 600, cost: 2.2, grocery: { 'Eggs': 5, 'Bread (slices)': 3 }, instructions: "1. Whisk eggs. 2. Scramble gently. 3. Serve on top of 3 slices of toast." },
+            'b_omelet_turkey': { name: 'Turkey Omelet & Oats', portion: '5 Eggs (2 Whites), 5 Turkey, 60g Oats', p: 50, c: 40, f: 20, kcal: 580, cost: 3.0, grocery: { 'Eggs': 5, 'Turkey Slices': 5, 'Oats (g)': 60 }, instructions: "1. Omelet with extra turkey. 2. Side of oatmeal with water/milk." },
+            'b_pancakes': { name: 'Protein Pancakes', portion: '4 Eggs, 80g Oats, 1 Banana, Honey', p: 30, c: 80, f: 18, kcal: 650, cost: 1.8, grocery: { 'Eggs': 4, 'Oats (g)': 80, 'Banana': 1, 'Honey (g)': 10 }, instructions: "1. Blend ingredients. 2. Cook on non-stick pan. 3. Top with honey." },
+            'b_feta_omelet': { name: 'Lean Feta Omelet', portion: '5 Eggs (3 Whites), 40g Feta, Spinach, 2 Toast', p: 42, c: 35, f: 22, kcal: 520, cost: 2.5, grocery: { 'Eggs': 5, 'Feta (g)': 40, 'Spinach (g)': 100, 'Bread (slices)': 2 }, instructions: "1. Saute spinach. 2. Use 2 whole eggs, 3 whites. 3. Add feta. 4. Serve with toast." },
 
-            // Snacks
-            's_fruit_nuts': { name: 'Fruit & Nuts', portion: '1 Banana, 30g Almonds', p: 7, c: 30, f: 15, kcal: 280, cost: 1.2, grocery: { 'Banana': 1, 'Almonds (g)': 30 }, instructions: "1. Eat banana. 2. Eat almonds. Simple." },
-            's_apple': { name: 'Apple', portion: '1 Large Apple', p: 0, c: 20, f: 0, kcal: 80, cost: 0.4, grocery: { 'Apple': 1 }, instructions: "Wash and eat." },
-            's_orange': { name: 'Orange', portion: '1 Large Orange', p: 1, c: 15, f: 0, kcal: 65, cost: 0.3, grocery: { 'Orange': 1 }, instructions: "Peel and eat." },
-            's_pear': { name: 'Pear', portion: '1 Large Pear', p: 0, c: 25, f: 0, kcal: 100, cost: 0.5, grocery: { 'Pear': 1 }, instructions: "Wash and eat." },
-            's_kiwi': { name: 'Kiwis', portion: '2 Kiwis', p: 2, c: 20, f: 0, kcal: 90, cost: 0.6, grocery: { 'Kiwi': 2 }, instructions: "Cut in half and scoop with spoon." },
-            's_banana': { name: 'Banana', portion: '1 Large Banana', p: 1, c: 27, f: 0, kcal: 105, cost: 0.3, grocery: { 'Banana': 1 }, instructions: "Peel and eat." },
-            's_yogurt_honey': { name: 'Greek Yogurt Bowl', portion: '250g 2% Yogurt, 20g Honey', p: 25, c: 25, f: 5, kcal: 250, cost: 1.5, grocery: { 'Greek Yogurt (g)': 250, 'Honey (g)': 20 }, instructions: "1. Scoop yogurt into bowl. 2. Drizzle honey on top." },
-            's_protein_shake': { name: 'Protein Shake', portion: '1 Scoop Whey, 300ml Milk', p: 35, c: 15, f: 5, kcal: 250, cost: 1.2, grocery: { 'Whey Scoop': 1, 'Milk (ml)': 300 }, instructions: "1. Add milk to shaker. 2. Add whey powder. 3. Shake well." },
-            's_yogurt_walnuts': { name: 'Yogurt & Walnuts', portion: '200g Yogurt, 30g Walnuts', p: 24, c: 10, f: 20, kcal: 320, cost: 1.8, grocery: { 'Greek Yogurt (g)': 200, 'Walnuts (g)': 30 }, instructions: "1. Bowl the yogurt. 2. Crush walnuts on top." },
-            's_protein_bar': { name: 'Protein Bar', portion: '1 Bar', p: 20, c: 20, f: 8, kcal: 240, cost: 2.0, grocery: { 'Protein Bar': 1 }, instructions: "Unwrap and enjoy." },
-            's_almonds': { name: 'Almonds', portion: '50g Almonds', p: 10, c: 10, f: 25, kcal: 290, cost: 1.0, grocery: { 'Almonds (g)': 50 }, instructions: "Eat them raw." },
-            's_eggs_rusk': { name: 'Protein Boost', portion: '2 Boiled Eggs, 2 Rusks', p: 14, c: 15, f: 10, kcal: 220, cost: 1.0, grocery: { 'Eggs': 2, 'Rusks': 2 }, instructions: "Boil eggs and serve with rusks." },
+            // Snacks - Adjusted to reduce fats and boost protein
+            's_fruit_nuts': { name: 'Banana & Yogurt Dip', portion: '2 Bananas, 150g Yogurt (Low Fat)', p: 18, c: 60, f: 2, kcal: 350, cost: 1.5, grocery: { 'Banana': 2, 'Greek Yogurt (g)': 150 }, instructions: "Slice banana into yogurt." },
+            's_apple': { name: 'Apple & Cottage Cheese', portion: '2 Apples, 150g Cottage Cheese', p: 18, c: 45, f: 5, kcal: 300, cost: 1.8, grocery: { 'Apple': 2, 'Cottage Cheese (g)': 150 }, instructions: "Fresh apples with side of cheese." },
+            's_orange': { name: 'Oranges & Walnuts', portion: '2 Oranges, 15g Walnuts', p: 4, c: 30, f: 10, kcal: 240, cost: 0.8, grocery: { 'Orange': 2, 'Walnuts (g)': 15 }, instructions: "Vitamin C with healthy fats." },
+            's_pear': { name: 'Pears & Yogurt', portion: '2 Pears, 150g Yogurt', p: 15, c: 55, f: 5, kcal: 340, cost: 1.6, grocery: { 'Pear': 2, 'Greek Yogurt (g)': 150 }, instructions: "Sliced pears in yogurt." },
+            's_kiwi': { name: 'Kiwis & Yogurt', portion: '4 Kiwis, 200g Yogurt', p: 20, c: 50, f: 0, kcal: 300, cost: 2.0, grocery: { 'Kiwi': 4, 'Greek Yogurt (g)': 200 }, instructions: "Vitamin C bomb." },
+            's_banana': { name: 'Banana & Peanut Butter', portion: '2 Bananas, 20g Peanut Butter', p: 8, c: 60, f: 10, kcal: 380, cost: 0.6, grocery: { 'Banana': 2, 'Peanut Butter (g)': 20 }, instructions: "Reduced PB to control fats." },
+            's_yogurt_honey': { name: 'Mega Yogurt Bowl', portion: '300g Yogurt, 30g Honey, 15g Walnuts', p: 30, c: 35, f: 10, kcal: 380, cost: 2.2, grocery: { 'Greek Yogurt (g)': 300, 'Honey (g)': 30, 'Walnuts (g)': 15 }, instructions: "High protein yogurt bowl." },
+            's_protein_shake': { name: 'Mass Shake', portion: '1.5 Scoops Whey, 400ml Milk, Banana', p: 50, c: 40, f: 8, kcal: 450, cost: 1.8, grocery: { 'Whey Scoop': 1.5, 'Milk (ml)': 400, 'Banana': 1 }, instructions: "Blend milk, whey and banana." },
+            's_yogurt_walnuts': { name: 'Yogurt & Walnuts', portion: '250g Yogurt, 25g Walnuts', p: 25, c: 15, f: 18, kcal: 350, cost: 2.0, grocery: { 'Greek Yogurt (g)': 250, 'Walnuts (g)': 25 }, instructions: "Balanced fat/protein snack." },
+            's_protein_bar': { name: 'Protein Bar & Fruit', portion: '1 Bar, 1 Banana', p: 21, c: 47, f: 8, kcal: 350, cost: 2.3, grocery: { 'Protein Bar': 1, 'Banana': 1 }, instructions: "Quick energy." },
+            's_almonds': { name: 'Almonds Bowl', portion: '40g Almonds', p: 8, c: 8, f: 20, kcal: 240, cost: 0.8, grocery: { 'Almonds (g)': 40 }, instructions: "Reduced portion to control fats." },
+            's_eggs_rusk': { name: 'Egg & Rusk Platter', portion: '3 Boiled Eggs, 4 Rusks', p: 22, c: 30, f: 15, kcal: 360, cost: 1.5, grocery: { 'Eggs': 3, 'Rusks': 4 }, instructions: "Filling savory snack." },
 
-            // Mains
-            'm_chicken_rice': { name: 'Chicken & Rice', portion: '200g Chicken Breast, 100g Rice', p: 60, c: 75, f: 8, kcal: 650, cost: 3.5, grocery: { 'Chicken Breast (g)': 200, 'Rice (g)': 100 }, instructions: "1. Boil rice. 2. Pan sear chicken breast with seasoning. 3. Serve together." },
-            'm_tuna_salad': { name: 'Tuna Salad', portion: '2x160g Tuna Cans, Lettuce, Oil', p: 50, c: 10, f: 15, kcal: 450, cost: 3.0, grocery: { 'Tuna Cans': 2, 'Lettuce (head)': 0.5, 'Olive Oil (ml)': 10 }, instructions: "1. Drain tuna. 2. Chop lettuce. 3. Mix in bowl with oil and lemon." },
-            'm_lentils': { name: 'Fakes (Lentils)', portion: '300g Soup, 60g Feta, Bread', p: 25, c: 50, f: 15, kcal: 500, cost: 1.5, grocery: { 'Lentils (g)': 100, 'Feta (g)': 60, 'Bread (slices)': 1 }, instructions: "1. Boil lentils with onion/bay leaf. 2. Add tomato/vinegar near end. 3. Serve with feta." },
-            'm_chicken_salad': { name: 'Chicken Salad', portion: '200g Chicken, Greens, Oil', p: 60, c: 10, f: 15, kcal: 450, cost: 3.0, grocery: { 'Chicken Breast (g)': 200, 'Greens (pack)': 0.5, 'Olive Oil (ml)': 10 }, instructions: "1. Grill chicken breast. 2. Slice and place over greens. 3. Dress with olive oil." },
-            'm_pasta_kima': { name: 'Makaronia Me Kima', portion: '150g Pasta, 150g Beef Sauce', p: 45, c: 80, f: 20, kcal: 750, cost: 3.0, grocery: { 'Pasta (g)': 150, 'Ground Beef (g)': 100, 'Tomato Sauce (g)': 100 }, instructions: "1. Brown beef with onions. 2. Add tomato sauce & simmer. 3. Boil pasta. 4. Combine." },
-            'm_dakos': { name: 'Dakos', portion: '3 Rusks, 100g Tomato, 60g Feta', p: 15, c: 40, f: 20, kcal: 450, cost: 2.0, grocery: { 'Rusks': 3, 'Tomato': 1, 'Feta (g)': 60, 'Olive Oil (ml)': 10 }, instructions: "1. Wet rusks slightly. 2. Grate tomato on top. 3. Crumble feta. 4. Drizzle oil & oregano." },
-            'm_sardines': { name: 'Grilled Sardines', portion: '250g Sardines, Horta', p: 50, c: 5, f: 25, kcal: 480, cost: 3.0, grocery: { 'Sardines (g)': 250, 'Horta (Greens) (g)': 200 }, instructions: "1. Clean sardines. 2. Grill or bake with lemon/oil for 20m. 3. Boil greens, serve with lemon." },
-            'm_spinach_omelet': { name: 'Spinach Omelet', portion: '6 Eggs, Spinach, Toast', p: 30, c: 20, f: 10, kcal: 350, cost: 2.5, grocery: { 'Eggs': 6, 'Spinach (g)': 100, 'Bread (slices)': 1 }, instructions: "1. Wilt spinach in pan. 2. Add beaten eggs. 3. Cook until set. 4. Serve with toast." },
-            'm_souvlaki': { name: 'Chicken Souvlaki', portion: '3 Skewers, 1 Pita, Tzatziki', p: 70, c: 35, f: 15, kcal: 600, cost: 4.0, grocery: { 'Chicken Skewers': 3, 'Pita Bread': 1, 'Tzatziki (g)': 50 }, instructions: "1. Grill skewers. 2. Warm pita. 3. Assemble with tzatziki." },
-            'm_gigantes': { name: 'Gigantes', portion: '300g Giant Beans, 40g Feta', p: 20, c: 50, f: 15, kcal: 450, cost: 2.0, grocery: { 'Giant Beans (g)': 100, 'Feta (g)': 40 }, instructions: "1. Soak beans overnight. 2. Boil 1hr. 3. Bake with tomato sauce/onions 1hr until soft." },
-            'm_pork_chop': { name: 'Pork Chop', portion: '250g Pork Chop, Horta', p: 60, c: 5, f: 25, kcal: 550, cost: 3.5, grocery: { 'Pork Chop (g)': 250, 'Horta (Greens) (g)': 200 }, instructions: "1. Pan fry or grill pork chop. 2. Boil greens. 3. Season with lemon/oil." },
-            'm_protein_salad': { name: 'Protein Salad', portion: 'Salad, 3 Eggs, 50g Cheese', p: 30, c: 10, f: 25, kcal: 400, cost: 2.5, grocery: { 'Greens (pack)': 0.5, 'Eggs': 3, 'Cheese (g)': 50 }, instructions: "1. Boil eggs. 2. Toss greens. 3. Cube cheese. 4. Combine." },
-            'm_roasted_chicken': { name: 'Roasted Chicken', portion: 'Half Chicken, Potatoes', p: 80, c: 40, f: 30, kcal: 800, cost: 4.0, grocery: { 'Whole Chicken': 0.5, 'Potatoes': 2 }, instructions: "1. Season chicken & potatoes. 2. Bake at 200C for 1.5hrs." },
-            'm_toast': { name: 'Toast', portion: '2 Slices Bread, Turkey, Cheese', p: 15, c: 30, f: 10, kcal: 300, cost: 1.5, grocery: { 'Bread (slices)': 2, 'Turkey Slices': 2, 'Cheese Slices': 2 }, instructions: "1. Assemble sandwich. 2. Toast in press until cheese melts." }
+            // Mains - Boosted Carbs/Proteins, Controlled Fats
+            'm_chicken_rice': { name: 'Big Chicken & Rice', portion: '250g Chicken, 120g Rice (Dry), Oil', p: 75, c: 95, f: 12, kcal: 820, cost: 4.5, grocery: { 'Chicken Breast (g)': 250, 'Rice (g)': 120, 'Olive Oil (ml)': 8 }, instructions: "1. Cook rice. 2. Grill chicken. 3. Use less oil." },
+            'm_tuna_salad': { name: 'Tuna & Potato Salad', portion: '2 Cans Tuna (Water), 400g Potato, Oil', p: 60, c: 70, f: 15, kcal: 680, cost: 3.5, grocery: { 'Tuna Cans': 2, 'Potatoes': 4, 'Olive Oil (ml)': 10 }, instructions: "1. Boil potatoes. 2. Mix with drained tuna (in water) & oil." },
+            'm_lentils': { name: 'Lentils & Tuna Side', portion: '400g Soup, 1 Can Tuna, 2 Bread', p: 55, c: 80, f: 15, kcal: 700, cost: 3.0, grocery: { 'Lentils (g)': 150, 'Tuna Cans': 1, 'Bread (slices)': 2 }, instructions: "Traditional Fakes. Side of tuna for protein." },
+            'm_chicken_salad': { name: 'Chicken & Quinoa Salad', portion: '250g Chicken, 100g Quinoa/Rusks', p: 70, c: 60, f: 15, kcal: 700, cost: 4.0, grocery: { 'Chicken Breast (g)': 250, 'Quinoa (g)': 100, 'Olive Oil (ml)': 10 }, instructions: "Big salad with extra carbs." },
+            'm_pasta_kima': { name: 'Pasta Kima (Lean)', portion: '200g Pasta, 180g Lean Beef Sauce', p: 60, c: 110, f: 15, kcal: 850, cost: 4.0, grocery: { 'Pasta (g)': 200, 'Ground Beef (g)': 180, 'Tomato Sauce (g)': 150 }, instructions: "Use lean beef (5%). Carb heavy." },
+            'm_dakos': { name: 'Dakos Platter', portion: '5 Rusks, Tomato, 80g Feta', p: 22, c: 65, f: 30, kcal: 650, cost: 2.8, grocery: { 'Rusks': 5, 'Tomato': 2, 'Feta (g)': 80, 'Olive Oil (ml)': 15 }, instructions: "Traditional Cretan salad." },
+            'm_sardines': { name: 'Sardines & Potatoes', portion: '300g Sardines, 300g Potatoes', p: 60, c: 55, f: 30, kcal: 750, cost: 3.5, grocery: { 'Sardines (g)': 300, 'Potatoes': 3 }, instructions: "Roast sardines with potato wedges." },
+            'm_spinach_omelet': { name: 'Spinach Omelet & Toast', portion: '6 Eggs (3 Whites), Spinach, 3 Toast', p: 45, c: 50, f: 20, kcal: 580, cost: 2.8, grocery: { 'Eggs': 6, 'Spinach (g)': 100, 'Bread (slices)': 3 }, instructions: "Large omelet (remove some yolks)." },
+            'm_souvlaki': { name: 'Chicken Souvlaki Meal', portion: '4 Skewers, 2 Pitas, Tzatziki', p: 90, c: 70, f: 20, kcal: 850, cost: 5.5, grocery: { 'Chicken Skewers': 4, 'Pita Bread': 2, 'Tzatziki (g)': 80 }, instructions: "Grill skewers. Warm 2 pitas." },
+            'm_gigantes': { name: 'Gigantes & Cheese', portion: '400g Beans, 150g Cottage Cheese, Bread', p: 35, c: 70, f: 15, kcal: 600, cost: 2.5, grocery: { 'Giant Beans (g)': 150, 'Cottage Cheese (g)': 150, 'Bread (slices)': 2 }, instructions: "Cottage cheese boosts protein without much fat." },
+            'm_pork_chop': { name: 'Pork Chop & Rice', portion: '300g Chop, 100g Rice', p: 70, c: 75, f: 30, kcal: 850, cost: 4.0, grocery: { 'Pork Chop (g)': 300, 'Rice (g)': 100 }, instructions: "Trim fat from chop. Pan fry." },
+            'm_protein_salad': { name: 'Chef Salad & Toast', portion: 'Salad, 4 Eggs, 80g Cheese, Toast', p: 45, c: 30, f: 35, kcal: 650, cost: 3.0, grocery: { 'Greens (pack)': 0.5, 'Eggs': 4, 'Cheese (g)': 80, 'Bread (slices)': 2 }, instructions: "Loaded salad with toast." },
+            'm_roasted_chicken': { name: 'Roasted Chicken & Potatoes', portion: 'Half Chicken, 400g Potatoes', p: 80, c: 70, f: 35, kcal: 950, cost: 4.5, grocery: { 'Whole Chicken': 0.5, 'Potatoes': 4 }, instructions: "Sunday roast size." },
+            'm_toast': { name: 'Double Toast', portion: '4 Slices Bread, 6 Turkey, 2 Cheese', p: 35, c: 60, f: 15, kcal: 550, cost: 2.5, grocery: { 'Bread (slices)': 4, 'Turkey Slices': 6, 'Cheese Slices': 2 }, instructions: "More turkey, less cheese for better macros." }
         };
 
         const DEFAULT_MEAL_PLAN = {
             1: { b: RECIPE_POOL['b_strapatsada'], s1: RECIPE_POOL['s_fruit_nuts'], l: RECIPE_POOL['m_chicken_rice'], s2: RECIPE_POOL['s_yogurt_honey'], d: RECIPE_POOL['m_tuna_salad'] },
             2: { b: RECIPE_POOL['b_feta_omelet'], s1: RECIPE_POOL['s_apple'], l: RECIPE_POOL['m_lentils'], s2: RECIPE_POOL['s_eggs_rusk'], d: RECIPE_POOL['m_chicken_salad'] },
-            3: { b: RECIPE_POOL['b_boiled'], s1: RECIPE_POOL['s_orange'], l: RECIPE_POOL['m_pasta_kima'], s2: RECIPE_POOL['s_protein_shake'], d: RECIPE_POOL['m_dakos'] },
+            3: { b: RECIPE_POOL['b_boiled'], s1: RECIPE_POOL['s_kiwi'], l: RECIPE_POOL['m_pasta_kima'], s2: RECIPE_POOL['s_protein_shake'], d: RECIPE_POOL['m_dakos'] },
             4: { b: RECIPE_POOL['b_fried'], s1: RECIPE_POOL['s_pear'], l: RECIPE_POOL['m_sardines'], s2: RECIPE_POOL['s_yogurt_walnuts'], d: RECIPE_POOL['m_spinach_omelet'] },
-            5: { b: RECIPE_POOL['b_scrambled'], s1: RECIPE_POOL['s_kiwi'], l: RECIPE_POOL['m_souvlaki'], s2: RECIPE_POOL['s_protein_bar'], d: RECIPE_POOL['m_gigantes'] },
+            5: { b: RECIPE_POOL['b_scrambled'], s1: RECIPE_POOL['s_orange'], l: RECIPE_POOL['m_souvlaki'], s2: RECIPE_POOL['s_protein_bar'], d: RECIPE_POOL['m_gigantes'] },
             6: { b: RECIPE_POOL['b_omelet_turkey'], s1: RECIPE_POOL['s_banana'], l: RECIPE_POOL['m_pork_chop'], s2: RECIPE_POOL['s_almonds'], d: RECIPE_POOL['m_protein_salad'] },
             0: { b: RECIPE_POOL['b_pancakes'], s1: RECIPE_POOL['s_fruit_nuts'], l: RECIPE_POOL['m_roasted_chicken'], s2: RECIPE_POOL['s_yogurt_honey'], d: RECIPE_POOL['m_toast'] }
         };
@@ -411,8 +415,8 @@
                                 <Utensils className="w-6 h-6" />
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Nutrition Dashboard</h1>
-                                <p className="text-sm text-slate-500 dark:text-slate-400">Standalone Viewer</p>
+                                <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Persephone</h1>
+                                <p className="text-sm text-slate-500 dark:text-slate-400">Nutrition Dashboard</p>
                             </div>
                         </div>
                         <button 
