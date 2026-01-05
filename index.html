@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circe Nutrition Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- React & Dependencies via Import Map -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "lucide-react": "https://esm.sh/lucide-react?deps=react@18.2.0"
+      }
+    }
+    </script>
+
+    <!-- Babel for JSX compilation in browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { transition: background-color 0.3s ease, color 0.3s ease; }
+        /* Hide scrollbar for clean UI */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none;  scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-300">
+    <div id="root" class="max-w-4xl mx-auto p-6"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { 
+            ShoppingCart, ChevronLeft, ChevronRight, BookOpen, RefreshCw, 
+            Edit2, Check, ChefHat, X, Utensils, Sun, Moon
+        } from 'lucide-react';
+
+        // --- DATA & CONFIG ---
+
+        const RECIPE_POOL = {
+            // Breakfast
+            'b_strapatsada': { name: 'Strapatsada', portion: '4 Eggs, 2 Tomatoes, 30g Feta', p: 32, c: 10, f: 25, kcal: 400, cost: 2.2, grocery: { 'Eggs': 4, 'Tomatoes': 2, 'Feta (g)': 30, 'Olive Oil (ml)': 10 }, instructions: "1. Grate tomatoes. 2. Simmer tomato pulp with oil until thick. 3. Add beaten eggs and scramble. 4. Add feta at the end." },
+            'b_boiled': { name: 'Hard Boiled Eggs', portion: '4 Large Eggs', p: 24, c: 2, f: 20, kcal: 280, cost: 1.6, grocery: { 'Eggs': 4 }, instructions: "1. Boil water. 2. Add eggs carefully. 3. Boil for 9-10 mins. 4. Cool in cold water and peel." },
+            'b_fried': { name: 'Fried Eggs', portion: '4 Eggs fried in 10ml Olive Oil', p: 24, c: 2, f: 30, kcal: 380, cost: 1.7, grocery: { 'Eggs': 4, 'Olive Oil (ml)': 10 }, instructions: "1. Heat oil in pan. 2. Crack eggs into pan. 3. Cook until whites are set but yolks runny. 4. Season." },
+            'b_scrambled': { name: 'Scrambled Eggs', portion: '4 Eggs, Toast', p: 28, c: 20, f: 20, kcal: 400, cost: 1.8, grocery: { 'Eggs': 4, 'Bread (slices)': 2 }, instructions: "1. Whisk eggs with splash of water. 2. Pour into heated pan. 3. Stir gently until set. 4. Serve with toast." },
+            'b_omelet_turkey': { name: 'Turkey Omelet', portion: '4 Eggs, 3 slices Turkey', p: 35, c: 2, f: 20, kcal: 350, cost: 2.5, grocery: { 'Eggs': 4, 'Turkey Slices': 3 }, instructions: "1. Whisk eggs. 2. Pour into pan. 3. Add turkey slices when half-set. 4. Fold and serve." },
+            'b_pancakes': { name: 'Oat Pancakes', portion: '3 Eggs, 60g Oats, Banana', p: 25, c: 55, f: 15, kcal: 480, cost: 1.5, grocery: { 'Eggs': 3, 'Oats (g)': 60, 'Banana': 1 }, instructions: "1. Blend eggs, oats, and banana. 2. Pour batter onto hot pan. 3. Flip when bubbles appear. 4. Serve." },
+            'b_feta_omelet': { name: 'Feta Omelet', portion: '4 Eggs, 50g Feta, Spinach', p: 35, c: 5, f: 30, kcal: 480, cost: 2.3, grocery: { 'Eggs': 4, 'Feta (g)': 50, 'Spinach (g)': 50 }, instructions: "1. Saute spinach briefly. 2. Pour whisked eggs over. 3. Crumble feta on top. 4. Fold when set." },
+
+            // Snacks
+            's_fruit_nuts': { name: 'Fruit & Nuts', portion: '1 Banana, 30g Almonds', p: 7, c: 30, f: 15, kcal: 280, cost: 1.2, grocery: { 'Banana': 1, 'Almonds (g)': 30 }, instructions: "1. Eat banana. 2. Eat almonds. Simple." },
+            's_apple': { name: 'Apple', portion: '1 Large Apple', p: 0, c: 20, f: 0, kcal: 80, cost: 0.4, grocery: { 'Apple': 1 }, instructions: "Wash and eat." },
+            's_orange': { name: 'Orange', portion: '1 Large Orange', p: 1, c: 15, f: 0, kcal: 65, cost: 0.3, grocery: { 'Orange': 1 }, instructions: "Peel and eat." },
+            's_pear': { name: 'Pear', portion: '1 Large Pear', p: 0, c: 25, f: 0, kcal: 100, cost: 0.5, grocery: { 'Pear': 1 }, instructions: "Wash and eat." },
+            's_kiwi': { name: 'Kiwis', portion: '2 Kiwis', p: 2, c: 20, f: 0, kcal: 90, cost: 0.6, grocery: { 'Kiwi': 2 }, instructions: "Cut in half and scoop with spoon." },
+            's_banana': { name: 'Banana', portion: '1 Large Banana', p: 1, c: 27, f: 0, kcal: 105, cost: 0.3, grocery: { 'Banana': 1 }, instructions: "Peel and eat." },
+            's_yogurt_honey': { name: 'Greek Yogurt Bowl', portion: '250g 2% Yogurt, 20g Honey', p: 25, c: 25, f: 5, kcal: 250, cost: 1.5, grocery: { 'Greek Yogurt (g)': 250, 'Honey (g)': 20 }, instructions: "1. Scoop yogurt into bowl. 2. Drizzle honey on top." },
+            's_protein_shake': { name: 'Protein Shake', portion: '1 Scoop Whey, 300ml Milk', p: 35, c: 15, f: 5, kcal: 250, cost: 1.2, grocery: { 'Whey Scoop': 1, 'Milk (ml)': 300 }, instructions: "1. Add milk to shaker. 2. Add whey powder. 3. Shake well." },
+            's_yogurt_walnuts': { name: 'Yogurt & Walnuts', portion: '200g Yogurt, 30g Walnuts', p: 24, c: 10, f: 20, kcal: 320, cost: 1.8, grocery: { 'Greek Yogurt (g)': 200, 'Walnuts (g)': 30 }, instructions: "1. Bowl the yogurt. 2. Crush walnuts on top." },
+            's_protein_bar': { name: 'Protein Bar', portion: '1 Bar', p: 20, c: 20, f: 8, kcal: 240, cost: 2.0, grocery: { 'Protein Bar': 1 }, instructions: "Unwrap and enjoy." },
+            's_almonds': { name: 'Almonds', portion: '50g Almonds', p: 10, c: 10, f: 25, kcal: 290, cost: 1.0, grocery: { 'Almonds (g)': 50 }, instructions: "Eat them raw." },
+            's_eggs_rusk': { name: 'Protein Boost', portion: '2 Boiled Eggs, 2 Rusks', p: 14, c: 15, f: 10, kcal: 220, cost: 1.0, grocery: { 'Eggs': 2, 'Rusks': 2 }, instructions: "Boil eggs and serve with rusks." },
+
+            // Mains
+            'm_chicken_rice': { name: 'Chicken & Rice', portion: '200g Chicken Breast, 100g Rice', p: 60, c: 75, f: 8, kcal: 650, cost: 3.5, grocery: { 'Chicken Breast (g)': 200, 'Rice (g)': 100 }, instructions: "1. Boil rice. 2. Pan sear chicken breast with seasoning. 3. Serve together." },
+            'm_tuna_salad': { name: 'Tuna Salad', portion: '2x160g Tuna Cans, Lettuce, Oil', p: 50, c: 10, f: 15, kcal: 450, cost: 3.0, grocery: { 'Tuna Cans': 2, 'Lettuce (head)': 0.5, 'Olive Oil (ml)': 10 }, instructions: "1. Drain tuna. 2. Chop lettuce. 3. Mix in bowl with oil and lemon." },
+            'm_lentils': { name: 'Fakes (Lentils)', portion: '300g Soup, 60g Feta, Bread', p: 25, c: 50, f: 15, kcal: 500, cost: 1.5, grocery: { 'Lentils (g)': 100, 'Feta (g)': 60, 'Bread (slices)': 1 }, instructions: "1. Boil lentils with onion/bay leaf. 2. Add tomato/vinegar near end. 3. Serve with feta." },
+            'm_chicken_salad': { name: 'Chicken Salad', portion: '200g Chicken, Greens, Oil', p: 60, c: 10, f: 15, kcal: 450, cost: 3.0, grocery: { 'Chicken Breast (g)': 200, 'Greens (pack)': 0.5, 'Olive Oil (ml)': 10 }, instructions: "1. Grill chicken breast. 2. Slice and place over greens. 3. Dress with olive oil." },
+            'm_pasta_kima': { name: 'Makaronia Me Kima', portion: '150g Pasta, 150g Beef Sauce', p: 45, c: 80, f: 20, kcal: 750, cost: 3.0, grocery: { 'Pasta (g)': 150, 'Ground Beef (g)': 100, 'Tomato Sauce (g)': 100 }, instructions: "1. Brown beef with onions. 2. Add tomato sauce & simmer. 3. Boil pasta. 4. Combine." },
+            'm_dakos': { name: 'Dakos', portion: '3 Rusks, 100g Tomato, 60g Feta', p: 15, c: 40, f: 20, kcal: 450, cost: 2.0, grocery: { 'Rusks': 3, 'Tomato': 1, 'Feta (g)': 60, 'Olive Oil (ml)': 10 }, instructions: "1. Wet rusks slightly. 2. Grate tomato on top. 3. Crumble feta. 4. Drizzle oil & oregano." },
+            'm_sardines': { name: 'Grilled Sardines', portion: '250g Sardines, Horta', p: 50, c: 5, f: 25, kcal: 480, cost: 3.0, grocery: { 'Sardines (g)': 250, 'Horta (Greens) (g)': 200 }, instructions: "1. Clean sardines. 2. Grill or bake with lemon/oil for 20m. 3. Boil greens, serve with lemon." },
+            'm_spinach_omelet': { name: 'Spinach Omelet', portion: '6 Eggs, Spinach, Toast', p: 30, c: 20, f: 10, kcal: 350, cost: 2.5, grocery: { 'Eggs': 6, 'Spinach (g)': 100, 'Bread (slices)': 1 }, instructions: "1. Wilt spinach in pan. 2. Add beaten eggs. 3. Cook until set. 4. Serve with toast." },
+            'm_souvlaki': { name: 'Chicken Souvlaki', portion: '3 Skewers, 1 Pita, Tzatziki', p: 70, c: 35, f: 15, kcal: 600, cost: 4.0, grocery: { 'Chicken Skewers': 3, 'Pita Bread': 1, 'Tzatziki (g)': 50 }, instructions: "1. Grill skewers. 2. Warm pita. 3. Assemble with tzatziki." },
+            'm_gigantes': { name: 'Gigantes', portion: '300g Giant Beans, 40g Feta', p: 20, c: 50, f: 15, kcal: 450, cost: 2.0, grocery: { 'Giant Beans (g)': 100, 'Feta (g)': 40 }, instructions: "1. Soak beans overnight. 2. Boil 1hr. 3. Bake with tomato sauce/onions 1hr until soft." },
+            'm_pork_chop': { name: 'Pork Chop', portion: '250g Pork Chop, Horta', p: 60, c: 5, f: 25, kcal: 550, cost: 3.5, grocery: { 'Pork Chop (g)': 250, 'Horta (Greens) (g)': 200 }, instructions: "1. Pan fry or grill pork chop. 2. Boil greens. 3. Season with lemon/oil." },
+            'm_protein_salad': { name: 'Protein Salad', portion: 'Salad, 3 Eggs, 50g Cheese', p: 30, c: 10, f: 25, kcal: 400, cost: 2.5, grocery: { 'Greens (pack)': 0.5, 'Eggs': 3, 'Cheese (g)': 50 }, instructions: "1. Boil eggs. 2. Toss greens. 3. Cube cheese. 4. Combine." },
+            'm_roasted_chicken': { name: 'Roasted Chicken', portion: 'Half Chicken, Potatoes', p: 80, c: 40, f: 30, kcal: 800, cost: 4.0, grocery: { 'Whole Chicken': 0.5, 'Potatoes': 2 }, instructions: "1. Season chicken & potatoes. 2. Bake at 200C for 1.5hrs." },
+            'm_toast': { name: 'Toast', portion: '2 Slices Bread, Turkey, Cheese', p: 15, c: 30, f: 10, kcal: 300, cost: 1.5, grocery: { 'Bread (slices)': 2, 'Turkey Slices': 2, 'Cheese Slices': 2 }, instructions: "1. Assemble sandwich. 2. Toast in press until cheese melts." }
+        };
+
+        const DEFAULT_MEAL_PLAN = {
+            1: { b: RECIPE_POOL['b_strapatsada'], s1: RECIPE_POOL['s_fruit_nuts'], l: RECIPE_POOL['m_chicken_rice'], s2: RECIPE_POOL['s_yogurt_honey'], d: RECIPE_POOL['m_tuna_salad'] },
+            2: { b: RECIPE_POOL['b_feta_omelet'], s1: RECIPE_POOL['s_apple'], l: RECIPE_POOL['m_lentils'], s2: RECIPE_POOL['s_eggs_rusk'], d: RECIPE_POOL['m_chicken_salad'] },
+            3: { b: RECIPE_POOL['b_boiled'], s1: RECIPE_POOL['s_orange'], l: RECIPE_POOL['m_pasta_kima'], s2: RECIPE_POOL['s_protein_shake'], d: RECIPE_POOL['m_dakos'] },
+            4: { b: RECIPE_POOL['b_fried'], s1: RECIPE_POOL['s_pear'], l: RECIPE_POOL['m_sardines'], s2: RECIPE_POOL['s_yogurt_walnuts'], d: RECIPE_POOL['m_spinach_omelet'] },
+            5: { b: RECIPE_POOL['b_scrambled'], s1: RECIPE_POOL['s_kiwi'], l: RECIPE_POOL['m_souvlaki'], s2: RECIPE_POOL['s_protein_bar'], d: RECIPE_POOL['m_gigantes'] },
+            6: { b: RECIPE_POOL['b_omelet_turkey'], s1: RECIPE_POOL['s_banana'], l: RECIPE_POOL['m_pork_chop'], s2: RECIPE_POOL['s_almonds'], d: RECIPE_POOL['m_protein_salad'] },
+            0: { b: RECIPE_POOL['b_pancakes'], s1: RECIPE_POOL['s_fruit_nuts'], l: RECIPE_POOL['m_roasted_chicken'], s2: RECIPE_POOL['s_yogurt_honey'], d: RECIPE_POOL['m_toast'] }
+        };
+
+        // --- COMPONENT: Nutrition Tab ---
+        const NutritionTab = ({ nutritionProgress, setNutritionProgress, bodyWeight, setBodyWeight, mealPlan, setMealPlan }) => {
+            const [view, setView] = useState('day');
+            const [selectedDate, setSelectedDate] = useState(new Date());
+            const [isEditingWeight, setIsEditingWeight] = useState(false);
+            const [tempWeight, setTempWeight] = useState(bodyWeight);
+            const [editMealId, setEditMealId] = useState(null); 
+            const [editAction, setEditAction] = useState(null); 
+            const [tempMealData, setTempMealData] = useState({});
+            const [showGroceries, setShowGroceries] = useState(false);
+            
+            // Recipe View State
+            const [viewingRecipe, setViewingRecipe] = useState(null); // holds the meal data to view
+
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            const shiftDate = (amount, unit) => { const newDate = new Date(selectedDate); if (unit === 'day') newDate.setDate(newDate.getDate() + amount); if (unit === 'week') newDate.setDate(newDate.getDate() + (amount * 7)); if (unit === 'month') newDate.setMonth(newDate.getMonth() + amount); setSelectedDate(newDate); };
+            const resetToToday = () => setSelectedDate(today);
+            const toggleMeal = (dateStr, mealId) => { const currentMeals = nutritionProgress[dateStr] || []; const newMeals = currentMeals.includes(mealId) ? currentMeals.filter(id => id !== mealId) : [...currentMeals, mealId]; setNutritionProgress({...nutritionProgress, [dateStr]: newMeals}); };
+            const saveWeight = () => { const val = parseFloat(tempWeight); if (!isNaN(val) && val > 0) { setBodyWeight(val); } else { setTempWeight(bodyWeight); } setIsEditingWeight(false); };
+            const getTargets = () => ({ p: Math.round(bodyWeight * 2.2), c: 300, f: 90, kcal: 2800 });
+
+            // Swap/Edit Logic
+            const openEdit = (mealType, data) => { setEditMealId(mealType); setEditAction('edit'); setTempMealData({...data}); };
+            const openSwap = (mealType) => { setEditMealId(mealType); setEditAction('swap'); };
+            const closeEdit = () => { setEditMealId(null); setEditAction(null); };
+            
+            const saveEdit = () => {
+                const day = selectedDate.getDay();
+                setMealPlan(prev => ({
+                    ...prev,
+                    [day]: { ...prev[day], [editMealId]: tempMealData }
+                }));
+                closeEdit();
+            };
+
+            const doSwap = (newRecipeKey) => {
+                const newMeal = RECIPE_POOL[newRecipeKey];
+                const day = selectedDate.getDay();
+                setMealPlan(prev => ({
+                    ...prev,
+                    [day]: { ...prev[day], [editMealId]: newMeal }
+                }));
+                closeEdit();
+            };
+
+            const getRandomRecipeKey = (currentKey, typePrefix) => {
+                const keys = Object.keys(RECIPE_POOL).filter(k => k.startsWith(typePrefix) && k !== currentKey);
+                if (keys.length === 0) return currentKey;
+                return keys[Math.floor(Math.random() * keys.length)];
+            };
+
+            const swapRandomly = () => {
+                let prefix = 'm_';
+                if (editMealId === 'b') prefix = 'b_';
+                if (editMealId === 's1' || editMealId === 's2') prefix = 's_';
+                
+                const keys = Object.keys(RECIPE_POOL).filter(k => k.startsWith(prefix));
+                const randomKey = keys[Math.floor(Math.random() * keys.length)];
+                doSwap(randomKey);
+            };
+
+            const calculateDailyMacros = () => {
+                const dayOfWeek = selectedDate.getDay();
+                const plan = mealPlan[dayOfWeek];
+                const dateStr = selectedDate.toDateString();
+                const completedMeals = nutritionProgress[dateStr] || [];
+                let totals = { p: 0, c: 0, f: 0, kcal: 0 };
+                completedMeals.forEach(mealId => { const meal = plan[mealId]; if (meal) { totals.p += meal.p; totals.c += meal.c; totals.f += meal.f; totals.kcal += meal.kcal; } });
+                return totals;
+            };
+
+            const generateGroceryList = () => {
+                const ingredientsMap = {};
+                let totalCost = 0;
+                Object.values(mealPlan).forEach(dayPlan => {
+                    Object.values(dayPlan).forEach(meal => {
+                        if (meal.grocery) {
+                            Object.entries(meal.grocery).forEach(([item, qty]) => {
+                                ingredientsMap[item] = (ingredientsMap[item] || 0) + qty;
+                            });
+                        }
+                        if (meal.cost) totalCost += meal.cost;
+                    });
+                });
+                return { ingredients: ingredientsMap, totalCost };
+            };
+
+            const renderGroceryView = () => {
+                const { ingredients, totalCost } = generateGroceryList();
+                const sortedIngredients = Object.entries(ingredients).sort((a,b) => b[1] - a[1]);
+                return (
+                    <div className="animate-in fade-in slide-in-from-bottom-4">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><ShoppingCart className="w-6 h-6 text-indigo-500" /> Weekly List</h2>
+                            <button onClick={() => setShowGroceries(false)} className="text-sm font-bold text-indigo-500 hover:underline">Back to Plan</button>
+                        </div>
+                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 mb-6">
+                            <div className="text-center">
+                                <div className="text-slate-500 text-xs uppercase font-bold mb-1">Estimated Cost (Greece)</div>
+                                <div className="text-3xl font-mono font-bold text-emerald-600 dark:text-emerald-400">€{totalCost.toFixed(2)}</div>
+                                <div className="text-xs text-slate-400 mt-2">Based on current weekly plan</div>
+                            </div>
+                        </div>
+                        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+                            <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50"><h3 className="font-bold text-sm text-slate-600 dark:text-slate-300">Items Needed</h3></div>
+                            <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                                {sortedIngredients.map(([name, count]) => (
+                                    <div key={name} className="p-4 flex justify-between items-center"><span className="font-medium text-slate-700 dark:text-slate-200">{name}</span><span className="text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 px-2 py-1 rounded-full">{count} {name.includes('(g)') || name.includes('(ml)') ? '' : 'qty'}</span></div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderRecipeModal = () => {
+                if (!viewingRecipe) return null;
+                const { name, instructions, grocery } = viewingRecipe;
+                
+                return (
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-in fade-in">
+                        <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md max-h-[80vh] overflow-y-auto shadow-2xl relative">
+                            <button onClick={() => setViewingRecipe(null)} className="absolute top-4 right-4 p-2 bg-slate-100 dark:bg-slate-700 rounded-full hover:bg-slate-200"><X className="w-5 h-5 text-slate-500" /></button>
+                            
+                            <div className="p-6">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400"><ChefHat className="w-8 h-8" /></div>
+                                    <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 leading-tight">{name}</h2>
+                                </div>
+                                
+                                <div className="space-y-6">
+                                    <div>
+                                        <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-3">Ingredients</h3>
+                                        <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-xl p-4 space-y-2">
+                                            {grocery ? Object.entries(grocery).map(([item, qty]) => (
+                                                <div key={item} className="flex justify-between items-center text-sm">
+                                                    <span className="text-slate-700 dark:text-slate-300 font-medium">{item}</span>
+                                                    <span className="font-mono text-slate-500">{qty}</span>
+                                                </div>
+                                            )) : <p className="text-slate-400 text-sm">No specific ingredients listed.</p>}
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-3">Instructions</h3>
+                                        <div className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed space-y-2">
+                                            {instructions ? instructions.split(/\d+\./).filter(Boolean).map((step, i) => (
+                                                <div key={i} className="flex gap-3">
+                                                    <span className="font-bold text-indigo-500 shrink-0">{i+1}.</span>
+                                                    <span>{step.trim()}</span>
+                                                </div>
+                                            )) : <p className="text-slate-400 italic">No instructions available.</p>}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            if (showGroceries) return renderGroceryView();
+
+            const renderDayView = () => {
+                const dayOfWeek = selectedDate.getDay();
+                const plan = mealPlan[dayOfWeek];
+                const dateStr = selectedDate.toDateString();
+                const completedMeals = nutritionProgress[dateStr] || [];
+                const totals = calculateDailyMacros();
+                const targets = getTargets();
+
+                return (
+                    <div className="space-y-6 animate-in slide-in-from-bottom-4 fade-in duration-300">
+                        {renderRecipeModal()}
+                        
+                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                            <div className="flex justify-between items-end mb-4">
+                                <div><h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Daily Targets</h2><div className="flex items-center gap-2 text-xs text-slate-500 cursor-pointer hover:text-indigo-500 transition-colors" onClick={() => setIsEditingWeight(true)}>{isEditingWeight ? <input type="number" autoFocus className="w-16 bg-slate-100 dark:bg-slate-700 rounded px-1 text-xs" value={tempWeight} onChange={(e) => setTempWeight(e.target.value)} onBlur={saveWeight} onKeyDown={(e) => e.key === 'Enter' && saveWeight()} /> : <span>Based on {bodyWeight}kg, 186cm</span>}{!isEditingWeight && <Edit2 className="w-3 h-3" />}</div></div>
+                                <div className="text-right"><div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{totals.kcal} <span className="text-sm text-slate-400 font-normal">/ {targets.kcal} kcal</span></div></div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="space-y-1"><div className="flex justify-between text-xs font-bold text-slate-500"><span>Protein</span><span>{totals.p}/{targets.p}g</span></div><div className="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden"><div className="h-full bg-rose-500 rounded-full" style={{ width: `${Math.min((totals.p / targets.p) * 100, 100)}%` }}></div></div></div>
+                                <div className="space-y-1"><div className="flex justify-between text-xs font-bold text-slate-500"><span>Carbs</span><span>{totals.c}/{targets.c}g</span></div><div className="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden"><div className="h-full bg-amber-500 rounded-full" style={{ width: `${Math.min((totals.c / targets.c) * 100, 100)}%` }}></div></div></div>
+                                <div className="space-y-1"><div className="flex justify-between text-xs font-bold text-slate-500"><span>Fats</span><span>{totals.f}/{targets.f}g</span></div><div className="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min((totals.f / targets.f) * 100, 100)}%` }}></div></div></div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30 flex justify-between items-center">
+                            <div><h3 className="font-bold text-orange-800 dark:text-orange-400">Meal Schedule</h3><p className="text-xs text-orange-600 dark:text-orange-500 capitalize">{selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p></div>
+                            <button onClick={() => setShowGroceries(true)} className="p-2 hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded-lg text-orange-600 transition" title="Grocery List"><ShoppingCart className="w-5 h-5" /></button>
+                        </div>
+
+                        <div className="space-y-3">
+                            {[{ id: 'b', label: 'Breakfast', icon: '🍳' }, { id: 's1', label: 'Morning Snack', icon: '🍏' }, { id: 'l', label: 'Lunch', icon: '🥗' }, { id: 's2', label: 'Afternoon Snack', icon: '🥜' }, { id: 'd', label: 'Dinner', icon: '🍽️' }].map(slot => {
+                                const mealData = plan[slot.id];
+                                const isDone = completedMeals.includes(slot.id);
+                                const isEditingThis = editMealId === slot.id;
+
+                                if (isEditingThis && editAction === 'edit') {
+                                    return (
+                                        <div key={slot.id} className="p-4 rounded-xl border bg-white dark:bg-slate-800 shadow-lg ring-2 ring-indigo-500 animate-in zoom-in-95">
+                                            <div className="mb-3 font-bold text-sm uppercase text-slate-400">Edit {slot.label}</div>
+                                            <input type="text" className="w-full mb-2 p-2 border rounded dark:bg-slate-700 dark:border-slate-600" value={tempMealData.name} onChange={e => setTempMealData({...tempMealData, name: e.target.value})} placeholder="Meal Name" />
+                                            <input type="text" className="w-full mb-2 p-2 border rounded dark:bg-slate-700 dark:border-slate-600" value={tempMealData.portion} onChange={e => setTempMealData({...tempMealData, portion: e.target.value})} placeholder="Portion (e.g. 200g)" />
+                                            <div className="grid grid-cols-4 gap-2 mb-4">
+                                                <input type="number" className="p-2 border rounded dark:bg-slate-700" value={tempMealData.p} onChange={e => setTempMealData({...tempMealData, p: parseInt(e.target.value)||0})} placeholder="P" />
+                                                <input type="number" className="p-2 border rounded dark:bg-slate-700" value={tempMealData.c} onChange={e => setTempMealData({...tempMealData, c: parseInt(e.target.value)||0})} placeholder="C" />
+                                                <input type="number" className="p-2 border rounded dark:bg-slate-700" value={tempMealData.f} onChange={e => setTempMealData({...tempMealData, f: parseInt(e.target.value)||0})} placeholder="F" />
+                                                <input type="number" className="p-2 border rounded dark:bg-slate-700" value={tempMealData.kcal} onChange={e => setTempMealData({...tempMealData, kcal: parseInt(e.target.value)||0})} placeholder="Kcal" />
+                                            </div>
+                                            <div className="flex gap-2"><button onClick={saveEdit} className="flex-1 py-2 bg-indigo-500 text-white rounded font-bold">Save</button><button onClick={closeEdit} className="flex-1 py-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded font-bold">Cancel</button></div>
+                                        </div>
+                                    );
+                                }
+
+                                return (
+                                    <div key={slot.id} className={`relative p-4 rounded-xl border transition-all flex flex-col gap-2 group ${isDone ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-70' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-indigo-200'}`}>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-4 cursor-pointer flex-1" onClick={() => toggleMeal(dateStr, slot.id)}>
+                                                <div className="text-2xl">{slot.icon}</div>
+                                                <div>
+                                                    <div className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-0.5">{slot.label}</div>
+                                                    <div className={`font-bold text-lg ${isDone ? 'text-slate-500 line-through' : 'text-slate-800 dark:text-slate-200'}`}>{mealData.name}</div>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2 items-center">
+                                                {/* Action Buttons */}
+                                                {!isDone && (
+                                                    <>
+                                                        <button onClick={() => setViewingRecipe(mealData)} className="p-1.5 text-slate-300 hover:text-indigo-500 transition" title="View Recipe"><BookOpen className="w-4 h-4" /></button>
+                                                        <button onClick={() => openSwap(slot.id)} className="p-1.5 text-slate-300 hover:text-indigo-500 transition" title="Swap Randomly"><RefreshCw className="w-4 h-4" /></button>
+                                                        <button onClick={() => openEdit(slot.id, mealData)} className="p-1.5 text-slate-300 hover:text-indigo-500 transition" title="Edit Meal"><Edit2 className="w-4 h-4" /></button>
+                                                    </>
+                                                )}
+                                                <div onClick={() => toggleMeal(dateStr, slot.id)} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer ${isDone ? 'bg-indigo-500 border-indigo-500' : 'border-slate-300 dark:border-slate-600 group-hover:border-indigo-400'}`}>
+                                                    {isDone && <Check className="w-4 h-4 text-white" />}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Swap UI Overlay */}
+                                        {isEditingThis && editAction === 'swap' && (
+                                            <div className="absolute inset-0 bg-white/95 dark:bg-slate-800/95 z-10 flex items-center justify-center gap-4 rounded-xl animate-in fade-in">
+                                                <button onClick={swapRandomly} className="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm font-bold shadow-lg flex items-center gap-2"><RefreshCw className="w-4 h-4" /> Pick Random</button>
+                                                <button onClick={closeEdit} className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-bold">Cancel</button>
+                                            </div>
+                                        )}
+
+                                        <div className="pl-[3.25rem] text-sm">
+                                            <div className="text-slate-600 dark:text-slate-400 mb-2">{mealData.portion}</div>
+                                            <div className="flex gap-3 text-xs font-mono text-slate-500">
+                                                <span className="bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-rose-600 font-bold">{mealData.p}g P</span>
+                                                <span className="bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-amber-600 font-bold">{mealData.c}g C</span>
+                                                <span className="bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-blue-600 font-bold">{mealData.f}g F</span>
+                                                <span className="text-slate-400 ml-auto">{mealData.kcal} kcal</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderWeekView = () => { const d = new Date(selectedDate); const day = d.getDay(); const diff = d.getDate() - day + (day === 0 ? -6 : 1); const monday = new Date(d.setDate(diff)); const weekDays = []; for (let i = 0; i < 7; i++) { const temp = new Date(monday); temp.setDate(monday.getDate() + i); weekDays.push(temp); } return (<div className="space-y-4 animate-in fade-in">{weekDays.map((date, idx) => { const plan = mealPlan[date.getDay()]; const isToday = date.toDateString() === today.toDateString(); const isSelected = date.toDateString() === selectedDate.toDateString(); return (<button key={idx} onClick={() => { setSelectedDate(date); setView('day'); }} className={`w-full p-4 rounded-xl text-left border transition ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/10' : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50'} ${isToday ? 'border-l-4 border-l-indigo-500' : 'border-slate-100 dark:border-slate-700'}`}><div className="flex gap-4"><div className="text-center w-12 shrink-0"><div className="text-xs text-slate-400 uppercase font-bold">{date.toLocaleDateString('en-US', { weekday: 'short' })}</div><div className="text-lg font-bold">{date.getDate()}</div></div><div className="flex-1 min-w-0"><div className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate">L: {plan.l.name}</div><div className="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">D: {plan.d.name}</div></div></div></button>); })}</div>); };
+            const renderMonthView = () => { const year = selectedDate.getFullYear(); const month = selectedDate.getMonth(); const firstDay = new Date(year, month, 1); const lastDay = new Date(year, month + 1, 0); const daysInMonth = lastDay.getDate(); const startDayOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; const days = []; for (let i = 0; i < startDayOffset; i++) days.push(null); for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i)); return (<div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm p-6 animate-in fade-in"><div className="grid grid-cols-7 gap-2 mb-2 text-center">{['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d,i) => (<div key={i} className="text-xs font-bold text-slate-400">{d}</div>))}</div><div className="grid grid-cols-7 gap-2">{days.map((date, idx) => { if (!date) return <div key={idx} className="aspect-square"></div>; const isSelected = date.toDateString() === selectedDate.toDateString(); const isToday = date.toDateString() === today.toDateString(); const completedCount = (nutritionProgress[date.toDateString()] || []).length; const allDone = completedCount === 5; return (<button key={idx} onClick={() => { setSelectedDate(date); setView('day'); }} className={`aspect-square rounded-lg flex flex-col items-center justify-center p-1 relative border transition hover:scale-105 ${isSelected ? 'ring-2 ring-indigo-500 z-10' : ''} ${isToday ? 'bg-slate-100 dark:bg-slate-700' : 'bg-transparent'} border-slate-100 dark:border-slate-700`}><span className={`text-xs font-medium mb-1 ${isToday ? 'text-indigo-600 font-bold' : ''}`}>{date.getDate()}</span><div className="flex gap-0.5">{completedCount > 0 && <div className={`w-1.5 h-1.5 rounded-full ${allDone ? 'bg-emerald-500' : 'bg-indigo-400'}`}></div>}</div></button>); })}</div></div>); };
+
+            if (showGroceries) return renderGroceryView();
+
+            return (
+                <div className="animate-in fade-in duration-500">
+                    <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4"><div className="flex items-center bg-white dark:bg-slate-800 rounded-lg p-1 shadow-sm border border-slate-100 dark:border-slate-700">{['day', 'week', 'month'].map(v => (<button key={v} onClick={() => setView(v)} className={`px-4 py-1.5 rounded-md text-sm font-medium capitalize transition-all ${view === v ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}>{v}</button>))}</div><div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-lg p-1 shadow-sm border border-slate-100 dark:border-slate-700"><button onClick={() => shiftDate(-1, view)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md"><ChevronLeft className="w-5 h-5 text-slate-500" /></button><button onClick={resetToToday} className="px-3 py-1 text-sm font-bold text-slate-600 dark:text-slate-300 min-w-[120px] text-center">{view === 'day' && selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}{view !== 'day' && selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</button><button onClick={() => shiftDate(1, view)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md"><ChevronRight className="w-5 h-5 text-slate-500" /></button></div></div>
+                    <div className="min-h-[400px]">{view === 'day' && renderDayView()}{view === 'week' && renderWeekView()}{view === 'month' && renderMonthView()}</div>
+                </div>
+            );
+        };
+
+        // --- APP WRAPPER (Mocks functionality of CirceApp) ---
+        function App() {
+            // Local state to simulate database data
+            const [nutritionProgress, setNutritionProgress] = useState({});
+            const [bodyWeight, setBodyWeight] = useState(82.5);
+            const [mealPlan, setMealPlan] = useState(DEFAULT_MEAL_PLAN);
+            
+            // Dark Mode State
+            const [isDarkMode, setIsDarkMode] = useState(false);
+
+            useEffect(() => {
+                if (isDarkMode) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }, [isDarkMode]);
+
+            return (
+                <div className="container mx-auto">
+                    <div className="mb-8 border-b border-slate-200 dark:border-slate-700 pb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-indigo-100 dark:bg-indigo-900/30 p-2 rounded-lg text-indigo-600 dark:text-indigo-400">
+                                <Utensils className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Nutrition Dashboard</h1>
+                                <p className="text-sm text-slate-500 dark:text-slate-400">Standalone Viewer</p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => setIsDarkMode(!isDarkMode)}
+                            className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                            aria-label="Toggle Dark Mode"
+                        >
+                            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                        </button>
+                    </div>
+                    
+                    <NutritionTab 
+                        nutritionProgress={nutritionProgress}
+                        setNutritionProgress={setNutritionProgress}
+                        bodyWeight={bodyWeight}
+                        setBodyWeight={setBodyWeight}
+                        mealPlan={mealPlan}
+                        setMealPlan={setMealPlan}
+                    />
+                </div>
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
